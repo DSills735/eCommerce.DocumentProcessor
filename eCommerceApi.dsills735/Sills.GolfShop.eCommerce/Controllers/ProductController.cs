@@ -13,19 +13,7 @@ public class ProductController(IProductsService productsService) : ControllerBas
 {
     private readonly IProductsService _productService = productsService;
     
-    [HttpGet]
-    public async Task<ActionResult<List<Product>>> GetAllProducts([FromQuery]PaginationParameters param)
-    {
-        var products = await _productService.GetAllProductsAsync();
-        
-        var pagedProducts = products
-            .Skip((param.PageNumber - 1) * param.PageSize)
-            .Take(param.PageSize)
-            .ToList();
-        
-        return Ok(pagedProducts);
-    }
-    
+
       [HttpGet]
     public async Task<ActionResult<List<Product>>> GetAllProductsAsync([FromQuery] PaginationParameters param)
     {
@@ -55,6 +43,8 @@ public class ProductController(IProductsService productsService) : ControllerBas
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProduct(int id, ProductUpdateDto productUpdateDto)
     {
+        
+
         var existingProduct = await _productService.GetProductByIdAsync(id);
         if (existingProduct == null)
         {

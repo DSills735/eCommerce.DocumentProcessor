@@ -1,43 +1,86 @@
 ﻿using ExcelDataReader;
 using Sills.GolfShop.eCommerceAPI.DTO;
+using System.Data;
+using System.Text;
 
 
 namespace Sills.GolfShop.eCommerceAPI.Document_Processing;
 
 public class Reader
 {
-    public static void ExcelReader()
+    private readonly HttpClient _httpClient;
+    public Reader(HttpClient httpClient)
     {
-        //TODO - refactor filepath so not hardcoded
+        _httpClient = httpClient;
+    }
+    //TODO -> https://your-server-domain/api/seed/bulk that is the endpoint url
+ 
+    public async Task ExcelReader(string filePath, string apiEndpointUrl)
+    {
+        //TODO - Still need to add filepath somewhere
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var categories = new List<SeedingCategoryDto>();
+        var products = new List<SeedingProductDto>();
 
-        using (var Stream = File.Open("C:\\Users\\sills\\Downloads\\Sills Golf Shop Inventory.xlsx", FileMode.Open, FileAccess.Read))
+        using (var Stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
         {
             using (var reader = ExcelReaderFactory.CreateReader(Stream))
             {
-                var categories = new List<SeedingCategoryDto>();
-                var products = new List<SeedingProductDto>();
-
-                var result = reader.AsDataSet();
-
-                //read each individual table and send to dataset
-                if (result.Tables.Contains("Categories"))
+                
+                var config = new ExcelDataSetConfiguration
                 {
-                    var categoryTable = result.Tables["Categories"];
-                    for (int i = 1; i < categoryTable.Rows.Count; i++)
+                    ConfigureDataTable = _ => new ExcelDataTableConfiguration
                     {
+                        UseHeaderRow = true
+                    }
+                };
+                var dataset = reader.AsDataSet(config);
 
-                        //why cs7036 \/?
-                        var category = new SeedingCategoryDto
-                        {
-                            Name = categoryTable.Rows[i][0].ToString(),
-                            Description = categoryTable.Rows[i][1].ToString()
-                        };
-                        categories.Add(category);
+                DataTable categoryTable = dataset.Tables["Categories"]!;
+                if (categoryTable != null)
+                {
+                    foreach (DataRow row in categoryTable.Rows)
+                    {
+                        categories.Add(new SeedingCategoryDto(
+                            Name: row["Name"]?.ToString() ?? string.Empty,
+                            Description: row["Description"]?.ToString() ?? string.Empty
+                        ));
                     }
                 }
 
+                DataTable productTable = dataset.Tables["Products"]!;
+                if (productTable != null)
+                {
+                    foreach (DataRow row in productTable.Rows)
+                    {
+                        products.Add(new SeedingProductDto(
+                            Name: row["Name"]?.ToString() ?? string.Empty,
+                            Description: row["Description"]?.ToString() ?? string.Empty,
+                            QuantityInStock: row["QuantityInStock"] != DBNull.Value
+                                ? Convert.ToInt32(row["QuantityInStock"])
+                                : 0
+                        ));
+                    }
+                }
+            }
 
+            var payload = new BulkSeedPayloadDto(categories, products);
+
+            Console.WriteLine($"Transmitting bulk seed payload containing {categories.Count} categories and {products.Count} products...");
+
+            using var response = await _httpClient.PostAsJsonAsync(apiEndpointUrl, payload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Golf shop seed payload processed successfully by the API.");
+            }
+            else
+            {
+                string errorDetails = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"API Seed Failure ({response.StatusCode}): {errorDetails}");
             }
         }
     }
+
+
 }
