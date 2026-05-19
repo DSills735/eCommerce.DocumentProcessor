@@ -1,6 +1,7 @@
 ﻿using ExcelDataReader;
 using Sills.GolfShop.eCommerceAPI.DTO;
 using System.Data;
+using System.Reflection;
 using System.Text;
 
 
@@ -15,15 +16,23 @@ public class Reader
     }
     //TODO -> https://your-server-domain/api/seed/bulk that is the endpoint url
  
-    public async Task ExcelReader(string filePath, string apiEndpointUrl)
+    public async Task ExcelReader(string apiEndpointUrl)
     {
         //TODO - Still need to add filepath somewhere
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+        var assembly = Assembly.GetExecutingAssembly();
         var categories = new List<SeedingCategoryDto>();
         var products = new List<SeedingProductDto>();
 
-        using (var Stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
+        string resourceName = "YourNamespace.Resources.DataToSeed.xlsx";
+        using (var Stream = assembly.GetManifestResourceStream(resourceName))
         {
+            if(Stream == null)
+            {
+                throw new FileNotFoundException($"Embedded resource '{resourceName}' not found. Ensure the file is added to the project and marked as an embedded resource.");
+            }
+
             using (var reader = ExcelReaderFactory.CreateReader(Stream))
             {
                 
