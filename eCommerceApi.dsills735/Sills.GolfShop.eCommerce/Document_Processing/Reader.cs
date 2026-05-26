@@ -14,7 +14,7 @@ public class Reader
     {
         _httpClient = httpClient;
     }
-    //TODO -> https://your-server-domain/api/seed/bulk that is the endpoint url
+    //TODO -> https://localhost:8080/api/seed/bulk that is the endpoint url 
  
     public async Task ExcelReader(string apiEndpointUrl)
     {
@@ -25,7 +25,7 @@ public class Reader
         var categories = new List<SeedingCategoryDto>();
         var products = new List<SeedingProductDto>();
 
-        string resourceName = "YourNamespace.Resources.DataToSeed.xlsx";
+        string resourceName = "YourNamespace.Resources.DataToSeed.xlsx"; // <- this needs to be updated to match the actual namespace and file name of the data file. 
         using (var Stream = assembly.GetManifestResourceStream(resourceName))
         {
             if(Stream == null)
