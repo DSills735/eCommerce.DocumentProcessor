@@ -1,6 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Microsoft.EntityFrameworkCore; // Added to extend IQueryable with ToListAsync
+using Microsoft.EntityFrameworkCore; 
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
