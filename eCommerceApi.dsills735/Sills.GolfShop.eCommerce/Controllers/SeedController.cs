@@ -5,7 +5,7 @@ using Sills.GolfShop.eCommerceAPI.Services;
 using System.Threading.Tasks;
 
 namespace Sills.GolfShop.eCommerceAPI.Controllers;
-//TODO -> https://localhost:8080/api/seed/bulk that is the endpoint url 
+
 [ApiController]
 [Route("api/[controller]")]
 public class SeedController(ICategoryService categoryService, IProductsService productService) : ControllerBase
@@ -29,7 +29,6 @@ public class SeedController(ICategoryService categoryService, IProductsService p
                 Description = categoryDto.Description
             };
 
-            // TODO collision handling?
             await _categoryService.CreateCategoryAsync(categoryEntity);
         }
 
@@ -41,9 +40,7 @@ public class SeedController(ICategoryService categoryService, IProductsService p
                 Name = productDto.Name,
                 Description = productDto.Description,
                 QuantityInStock = productDto.QuantityInStock
-                //need FK?
             };
-            // TODO collision handling?
             await _productService.CreateProductAsync(productEntity);
         }
 
